@@ -7,21 +7,19 @@ import { Input } from "@medusajs/ui"
 
 
 const StoreDetails = () => {
-    const { 
-        
-        store,
-        isLoading
-      } = useAdminStore();
-      console.log(store);
+  const {
+
+    store,
+    isLoading
+  } = useAdminStore();
+  console.log(store);
   return (
     <Container>
-      
-      <div>
-      
 
-      <h2>Admin Store Data</h2>
-       {/* Check and display the domain if available */}
-       {/* {store && store.domain ? (
+      <div>
+        <h2>Admin Store Data</h2>
+        {/* Check and display the domain if available */}
+        {/* {store && store.domain ? (
                     <div>
                         <h2>Store Domain</h2>
                         <span>{store.domain}</span>
@@ -30,12 +28,12 @@ const StoreDetails = () => {
                     <span>Domain not available</span>
                 )} */}
 
-<Input placeholder="Sub-domain" id="input-id" />
+        <Input placeholder="Sub-domain" id="input-id" />
 
-      {/* Display your store data here */}
-      <pre>{JSON.stringify(store, null, 2)}</pre>
-      
-    </div>
+        {/* Display your store data here */}
+        <pre>{JSON.stringify(store, null, 2)}</pre>
+
+      </div>
 
     </Container>
   );

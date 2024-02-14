@@ -26,14 +26,10 @@ const StoreDetails = () => {
                 ) : (
                     <span>Domain not available</span>
                 )} */}
-
         <Input placeholder="Sub-domain" id="input-id" />
-
         {/* Display your store data here */}
         <pre>{JSON.stringify(store, null, 2)}</pre>
-
       </div>
-
     </Container>
   );
 };

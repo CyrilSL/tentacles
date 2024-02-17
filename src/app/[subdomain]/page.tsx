@@ -10,7 +10,8 @@ export default function Storefront({
 })  {
     const { products, isLoading } = useProducts()
   console.log("Products : ",products)
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL.replace(/^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)/, '').replace(/\/$/, '');
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'example.com').replace(/^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)/, '').replace(/\/$/, '');
+
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">

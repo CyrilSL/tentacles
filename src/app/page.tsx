@@ -4,13 +4,20 @@ import { useProducts } from "medusa-react"
 import { useAdminStore } from "medusa-react"
 import React, { useEffect, useState } from "react";
 
+// Define the Product interface
+interface Product {
+  id: string;
+  title: string;
+  // Add other properties as needed
+}
+
 export default function Storefront({
   params,
 }: {
   params: { subdomain: string };
 })  {
     const { products, isLoading } = useProducts();
-    const [domainProducts, setDomainProducts] = useState([]);
+    const [domainProducts, setDomainProducts] = useState<Product[]>([]);
     const [isLoadingg, setIsLoadingg] = useState(false);
 
     useEffect(() => {
@@ -22,7 +29,7 @@ export default function Storefront({
             throw new Error('Network response was not ok');
           }
           const data = await response.json();
-          setDomainProducts(data.products); // Assuming the API response has a products array
+          setDomainProducts(data.products); // Assuming the API response contains a 'products' array
         } catch (error) {
           console.error("Failed to fetch products:", error);
           setDomainProducts([]);
@@ -32,7 +39,8 @@ export default function Storefront({
       };
   
       fetchProductsByDomain();
-    }, [params.subdomain]); // Re-run the effect if subdomain changes
+    }, [params.subdomain]);
+  
   
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">

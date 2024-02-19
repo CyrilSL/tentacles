@@ -7,11 +7,11 @@ import RefinementList from '@modules/store/components/refinement-list';
 import { StoreGetProductsParams } from '@medusajs/medusa';
 import { SortOptions } from '../components/refinement-list/sort-products';
 
-// Fetch function to get products from your API
+// Updated fetch function to get products from your provided API
 const fetchProducts = async () => {
-  const baseUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
-  console.log("Backend URL : ",baseUrl);
-  const response = await fetch(baseUrl+'/store/products');
+  const apiUrl = "https://octopus-production-47ec.up.railway.app/store/products"; // Provided API endpoint
+  console.log("Fetching products from: ", apiUrl);
+  const response = await fetch(apiUrl);
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
@@ -34,8 +34,8 @@ const StoreTemplate = () => {
     return <div>Error fetching products</div>;
   }
 
+  // Note: You might need to adjust the logic below based on the structure of your fetched data and how you want to display it
   // Adjust params based on the fetched data to pass to InfiniteProducts
-  // This is an example, you might need to adjust the logic based on how you want to use the fetched data
   const adjustedParams = {
     ...params,
     products: data?.products,

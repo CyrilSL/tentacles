@@ -12,7 +12,7 @@ import { getValidSubdomain } from "@lib/subdomain"
 import { useQuery } from '@tanstack/react-query' // Import useQuery
 
 async function fetchStoreName(domain: string) {
-  const response = await fetch(`http://localhost:9000/store/store_by_domain/?domain=${domain}`);
+  const response = await fetch(`https://octopus-production-47ec.up.railway.app/store/store_by_domain/?domain=${domain}`);
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }

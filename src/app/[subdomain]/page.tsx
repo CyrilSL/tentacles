@@ -37,7 +37,6 @@ export default function Storefront({
           setIsLoadingg(false);
         }
       };
-  
       fetchProductsByDomain();
     }, [params.subdomain]);
   

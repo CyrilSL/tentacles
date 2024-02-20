@@ -4,11 +4,20 @@ import { useMobileMenu } from "@lib/context/mobile-menu-context"
 import useToggleState from "@lib/hooks/use-toggle-state"
 import Hamburger from "@modules/common/components/hamburger"
 import CartDropdown from "@modules/layout/components/cart-dropdown"
-import DropdownMenu from "@modules/layout/components/dropdown-menu"
 import SideMenu from "@modules/layout/components/side-menu"
 import MobileMenu from "@modules/mobile-menu/templates"
 import DesktopSearchModal from "@modules/search/templates/desktop-search-modal"
 import Link from "next/link"
+import { getValidSubdomain } from "@lib/subdomain"
+import { useQuery } from '@tanstack/react-query' // Import useQuery
+
+async function fetchStoreName(domain: string) {
+  const response = await fetch(`http://localhost:9000/store/store_by_domain/?domain=${domain}`);
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.json();
+}
 
 const Nav = () => {
   const { toggle } = useMobileMenu()
@@ -17,6 +26,13 @@ const Nav = () => {
     close: searchModalClose,
     open: searchModalOpen,
   } = useToggleState()
+
+  const subdomain = getValidSubdomain() || 'test' // Default to 'test' if subdomain is null
+
+  // Use React Query to fetch the store name
+  const { data: storeData, isLoading, error } = useQuery(['storeName', subdomain], () => fetchStoreName(subdomain), {
+    enabled: !!subdomain, // Only run the query if the subdomain exists
+  });
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
@@ -32,11 +48,9 @@ const Nav = () => {
           </div>
 
           <div className="flex items-center h-full">
-            <Link
-              href="/"
-              className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase"
-            >
-              Medusa Store
+          <Link href="/" className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase">
+              {/* Display store name from API or "Loading..." or "Error" */}
+              {isLoading ? 'Loading...' : error ? 'Error' : storeData?.name || 'Medusa Store'}
             </Link>
           </div>
 

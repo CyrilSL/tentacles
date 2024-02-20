@@ -12,11 +12,13 @@ import { getValidSubdomain } from "@lib/subdomain"
 import { useQuery } from '@tanstack/react-query' // Import useQuery
 
 async function fetchStoreName(domain: string) {
-  const response = await fetch(`https://octopus-production-47ec.up.railway.app/store/store_by_domain/?domain=${domain}`);
+  const response = await fetch(`http://localhost:9000/store/store_by_domain/?domain=${domain}`);
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
-  return response.json();
+  const data = await response.json();
+  // Extract the name value from the store object
+  return data.store.name;
 }
 
 const Nav = () => {
@@ -27,10 +29,10 @@ const Nav = () => {
     open: searchModalOpen,
   } = useToggleState()
 
-  const subdomain = getValidSubdomain() || 'test' // Default to 'test' if subdomain is null
+  const subdomain = getValidSubdomain() || 'Cyril' // Default to 'Cyril' if subdomain is null
 
   // Use React Query to fetch the store name
-  const { data: storeData, isLoading, error } = useQuery(['storeName', subdomain], () => fetchStoreName(subdomain), {
+  const { data: storeName, isLoading, error } = useQuery(['storeName', subdomain], () => fetchStoreName(subdomain), {
     enabled: !!subdomain, // Only run the query if the subdomain exists
   });
 
@@ -48,9 +50,9 @@ const Nav = () => {
           </div>
 
           <div className="flex items-center h-full">
-          <Link href="/" className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase">
+            <Link href="/" className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase">
               {/* Display store name from API or "Loading..." or "Error" */}
-              {isLoading ? 'Loading...' : error ? 'Error' : storeData?.name || 'Medusa Store'}
+              {isLoading ? 'Loading...' : error ? 'Error' : storeName || 'Medusa Store'}
             </Link>
           </div>
 

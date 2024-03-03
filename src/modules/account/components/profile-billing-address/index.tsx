@@ -1,24 +1,44 @@
-"use client"
-
-import { Customer, Region } from "@medusajs/medusa"
-import React, { useEffect, useMemo } from "react"
-
+import { useAccount } from "@lib/context/account-context"
+import { Customer, StorePostCustomersCustomerReq } from "@medusajs/medusa"
 import Input from "@modules/common/components/input"
 import NativeSelect from "@modules/common/components/native-select"
-
+import { useRegions, useUpdateMe } from "medusa-react"
+import React, { useEffect, useMemo } from "react"
+import { useForm, useWatch } from "react-hook-form"
 import AccountInfo from "../account-info"
-import { useFormState } from "react-dom"
-import { updateCustomerBillingAddress } from "@modules/account/actions"
 
 type MyInformationProps = {
   customer: Omit<Customer, "password_hash">
-  regions: Region[]
 }
 
-const ProfileBillingAddress: React.FC<MyInformationProps> = ({
-  customer,
-  regions,
-}) => {
+type UpdateCustomerNameFormData = Pick<
+  StorePostCustomersCustomerReq,
+  "billing_address"
+>
+
+const ProfileBillingAddress: React.FC<MyInformationProps> = ({ customer }) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<UpdateCustomerNameFormData>({
+    defaultValues: {
+      ...mapBillingAddressToFormData({ customer }),
+    },
+  })
+
+  const {
+    mutate: update,
+    isLoading,
+    isSuccess,
+    isError,
+    reset: clearState,
+  } = useUpdateMe()
+
+  const { regions } = useRegions()
+
   const regionOptions = useMemo(() => {
     return (
       regions
@@ -32,20 +52,52 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
     )
   }, [regions])
 
-  const [successState, setSuccessState] = React.useState(false)
+  useEffect(() => {
+    reset({
+      ...mapBillingAddressToFormData({ customer }),
+    })
+  }, [customer, reset])
 
-  const [state, formAction] = useFormState(updateCustomerBillingAddress, {
-    error: false,
-    success: false,
+  const { refetchCustomer } = useAccount()
+
+  const [
+    firstName,
+    lastName,
+    company,
+    address1,
+    address2,
+    city,
+    province,
+    postalCode,
+    countryCode,
+  ] = useWatch({
+    control,
+    name: [
+      "billing_address.first_name",
+      "billing_address.last_name",
+      "billing_address.company",
+      "billing_address.address_1",
+      "billing_address.address_2",
+      "billing_address.city",
+      "billing_address.province",
+      "billing_address.postal_code",
+      "billing_address.country_code",
+    ],
   })
 
-  const clearState = () => {
-    setSuccessState(false)
+  const updateBillingAddress = (data: UpdateCustomerNameFormData) => {
+    return update(
+      {
+        id: customer.id,
+        ...data,
+      },
+      {
+        onSuccess: () => {
+          refetchCustomer()
+        },
+      }
+    )
   }
-
-  useEffect(() => {
-    setSuccessState(state.success)
-  }, [state])
 
   const currentInfo = useMemo(() => {
     if (!customer.billing_address) {
@@ -80,68 +132,77 @@ const ProfileBillingAddress: React.FC<MyInformationProps> = ({
   }, [customer, regionOptions])
 
   return (
-    <form action={formAction} onReset={() => clearState()} className="w-full">
+    <form
+      onSubmit={handleSubmit(updateBillingAddress)}
+      onReset={() => reset(mapBillingAddressToFormData({ customer }))}
+      className="w-full"
+    >
       <AccountInfo
         label="Billing address"
         currentInfo={currentInfo}
-        isSuccess={successState}
-        isError={!!state.error}
+        isLoading={isLoading}
+        isSuccess={isSuccess}
+        isError={isError}
         clearState={clearState}
       >
         <div className="grid grid-cols-1 gap-y-2">
           <div className="grid grid-cols-2 gap-x-2">
             <Input
               label="First name"
-              name="billing_address.first_name"
-              defaultValue={customer.billing_address?.first_name || undefined}
-              required
+              {...register("billing_address.first_name", {
+                required: true,
+              })}
+              defaultValue={firstName}
+              errors={errors}
             />
             <Input
               label="Last name"
-              name="billing_address.last_name"
-              defaultValue={customer.billing_address?.last_name || undefined}
-              required
+              {...register("billing_address.last_name", { required: true })}
+              defaultValue={lastName}
+              errors={errors}
             />
           </div>
           <Input
             label="Company"
-            name="billing_address.company"
-            defaultValue={customer.billing_address?.company || undefined}
+            {...register("billing_address.company")}
+            defaultValue={company}
+            errors={errors}
           />
           <Input
             label="Address"
-            name="billing_address.address_1"
-            defaultValue={customer.billing_address?.address_1 || undefined}
-            required
+            {...register("billing_address.address_1", { required: true })}
+            defaultValue={address1}
+            errors={errors}
           />
           <Input
             label="Apartment, suite, etc."
-            name="billing_address.address_2"
-            defaultValue={customer.billing_address?.address_2 || undefined}
+            {...register("billing_address.address_2")}
+            defaultValue={address2}
+            errors={errors}
           />
           <div className="grid grid-cols-[144px_1fr] gap-x-2">
             <Input
               label="Postal code"
-              name="billing_address.postal_code"
-              defaultValue={customer.billing_address?.postal_code || undefined}
-              required
+              {...register("billing_address.postal_code", { required: true })}
+              defaultValue={postalCode}
+              errors={errors}
             />
             <Input
               label="City"
-              name="billing_address.city"
-              defaultValue={customer.billing_address?.city || undefined}
-              required
+              {...register("billing_address.city", { required: true })}
+              defaultValue={city}
+              errors={errors}
             />
           </div>
           <Input
             label="Province"
-            name="billing_address.province"
-            defaultValue={customer.billing_address?.province || undefined}
+            {...register("billing_address.province")}
+            defaultValue={province}
+            errors={errors}
           />
           <NativeSelect
-            name="billing_address.country_code"
-            defaultValue={customer.billing_address?.country_code || undefined}
-            required
+            {...register("billing_address.country_code", { required: true })}
+            defaultValue={countryCode}
           >
             <option value="">-</option>
             {regionOptions.map((option, i) => {

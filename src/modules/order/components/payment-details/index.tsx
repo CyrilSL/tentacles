@@ -1,12 +1,20 @@
 import { Order } from "@medusajs/medusa"
 import { Container, Heading, Text } from "@medusajs/ui"
-import { formatAmount } from "@lib/util/prices"
-
-import { paymentInfoMap } from "@lib/constants"
+import { paymentInfoMap } from "@modules/checkout/components/payment"
 import Divider from "@modules/common/components/divider"
+import { formatAmount } from "medusa-react"
 
 type PaymentDetailsProps = {
   order: Order
+}
+
+const currencyCodeSymbolMap: { [key: string]: string } = {
+  USD: "$",
+  EUR: "€",
+  DKK: "kr",
+  GBP: "£",
+  SEK: "kr",
+  NOK: "kr",
 }
 
 const PaymentDetails = ({ order }: PaymentDetailsProps) => {
@@ -41,8 +49,9 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                     : `${formatAmount({
                         amount: payment.amount,
                         region: order.region,
-                        includeTaxes: false,
-                      })} paid at ${new Date(payment.created_at).toString()}`}
+                      })} paid at ${new Date(
+                        payment.created_at
+                      ).toLocaleString()}`}
                 </Text>
               </div>
             </div>

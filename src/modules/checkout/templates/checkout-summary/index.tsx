@@ -1,27 +1,21 @@
-import { Heading } from "@medusajs/ui"
+"use client"
 
+import { Heading } from "@medusajs/ui"
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
 import DiscountCode from "@modules/checkout/components/discount-code"
 import CartTotals from "@modules/common/components/cart-totals"
 import Divider from "@modules/common/components/divider"
-import { cookies } from "next/headers"
-import { getCart } from "@lib/data"
+import { useCart } from "medusa-react"
 
-const CheckoutSummary = async () => {
-  const cartId = cookies().get("_medusa_cart_id")?.value
+const CheckoutSummary = () => {
+  const { cart } = useCart()
 
-  if (!cartId) {
-    return null
-  }
-
-  const cart = await getCart(cartId).then((cart) => cart)
-
-  if (!cart) {
+  if (!cart?.id) {
     return null
   }
 
   return (
-    <div className="sticky top-0 flex flex-col-reverse small:flex-col gap-y-8 py-8 small:py-0 ">
+    <div className="sticky top-0 flex flex-col-reverse small:flex-col gap-y-8 py-8 px-4 small:py-0 small:pr-8 ">
       <div className="w-full bg-white flex flex-col">
         <Divider className="my-6 small:hidden" />
         <Heading

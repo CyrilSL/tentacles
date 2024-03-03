@@ -5,7 +5,7 @@ import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { Region } from "@medusajs/medusa"
 import { Text, clx, useToggleState } from "@medusajs/ui"
 import { Fragment } from "react"
-
+import Link from 'next/l'
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CountrySelect from "../country-select"
 
@@ -53,13 +53,20 @@ const SideMenu = ({ regions }: { regions: Region[] | null }) => {
                       {Object.entries(SideMenuItems).map(([name, href]) => {
                         return (
                           <li key={name}>
-                            <LocalizedClientLink
+                            <Link
                               href={href}
                               className="text-3xl leading-10 hover:text-ui-fg-disabled"
                               onClick={close}
                             >
                               {name}
-                            </LocalizedClientLink>
+                            </Link>
+                            {/* <LocalizedClientLink
+                              href={href}
+                              className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                              onClick={close}
+                            >
+                              {name}
+                            </LocalizedClientLink> */}
                           </li>
                         )
                       })}

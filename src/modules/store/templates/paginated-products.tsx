@@ -18,20 +18,16 @@ export default async function PaginatedProducts({
   collectionId,
   categoryId,
   productsIds,
-  countryCode,
+
 }: {
   sortBy?: SortOptions
   page: number
   collectionId?: string
   categoryId?: string
   productsIds?: string[]
-  countryCode: string
+  
 }) {
-  const region = await getRegion(countryCode)
-
-  if (!region) {
-    return null
-  }
+  
 
   const queryParams: PaginatedProductsParams = {
     limit: PRODUCT_LIMIT,
@@ -55,7 +51,6 @@ export default async function PaginatedProducts({
     page,
     queryParams,
     sortBy,
-    countryCode,
   })
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
@@ -66,7 +61,7 @@ export default async function PaginatedProducts({
         {products.map((p) => {
           return (
             <li key={p.id}>
-              <ProductPreview productPreview={p} region={region} />
+              <ProductPreview productPreview={p} />
             </li>
           )
         })}

@@ -5,7 +5,7 @@ import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { Region } from "@medusajs/medusa"
 import { Text, clx, useToggleState } from "@medusajs/ui"
 import { Fragment } from "react"
-import Link from 'next/l'
+import Link from 'next/link'
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CountrySelect from "../country-select"
 

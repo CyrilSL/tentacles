@@ -24,7 +24,7 @@ export default function Storefront({
       const fetchProductsByDomain = async () => {
         setIsLoadingg(true);
         try {
-          const response = await fetch(`https://octopus-production-47ec.up.railway.app/store/fetch_by_domain/?domain=${params.subdomain}`);
+          const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/fetch_by_domain/?domain=${params.subdomain}`);
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }
@@ -37,7 +37,6 @@ export default function Storefront({
           setIsLoadingg(false);
         }
       };
-  
       fetchProductsByDomain();
     }, [params.subdomain]);
   
@@ -60,6 +59,7 @@ export default function Storefront({
         </div>
       </div>
  <div>
+  <h1>All Products</h1>
       {isLoading && <span>Loading...</span>}
       {products && !products.length && <span>No Products</span>}
       {products && products.length > 0 && (

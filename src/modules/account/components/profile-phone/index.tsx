@@ -1,52 +1,85 @@
-"use client"
-
+import { useAccount } from "@lib/context/account-context"
 import { Customer } from "@medusajs/medusa"
-import React, { useEffect } from "react"
-import { useFormState } from "react-dom"
-
 import Input from "@modules/common/components/input"
-
+import { useUpdateMe } from "medusa-react"
+import React, { useEffect } from "react"
+import { useForm, useWatch } from "react-hook-form"
 import AccountInfo from "../account-info"
-import { updateCustomerPhone } from "@modules/account/actions"
 
 type MyInformationProps = {
   customer: Omit<Customer, "password_hash">
 }
 
-const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
-  const [successState, setSuccessState] = React.useState(false)
+type UpdateCustomerPhoneFormData = {
+  phone: string
+}
 
-  const [state, formAction] = useFormState(updateCustomerPhone, {
-    error: false,
-    success: false,
+const ProfilePhone: React.FC<MyInformationProps> = ({ customer }) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<UpdateCustomerPhoneFormData>({
+    defaultValues: {
+      phone: customer.phone,
+    },
   })
 
-  const clearState = () => {
-    setSuccessState(false)
-  }
+  const { refetchCustomer } = useAccount()
+
+  const {
+    mutate: update,
+    isLoading,
+    isSuccess,
+    isError,
+    reset: clearState,
+  } = useUpdateMe()
 
   useEffect(() => {
-    setSuccessState(state.success)
-  }, [state])
+    reset({
+      phone: customer.phone,
+    })
+  }, [customer, reset])
+
+  const phone = useWatch({
+    control,
+    name: "phone",
+  })
+
+  const updatePhone = (data: UpdateCustomerPhoneFormData) => {
+    return update(
+      {
+        id: customer.id,
+        ...data,
+      },
+      {
+        onSuccess: () => {
+          refetchCustomer()
+        },
+      }
+    )
+  }
 
   return (
-    <form action={formAction} className="w-full">
+    <form onSubmit={handleSubmit(updatePhone)} className="w-full">
       <AccountInfo
         label="Phone"
         currentInfo={`${customer.phone}`}
-        isSuccess={successState}
-        isError={!!state.error}
-        errorMessage={state.error}
+        isLoading={isLoading}
+        isSuccess={isSuccess}
+        isError={isError}
         clearState={clearState}
       >
         <div className="grid grid-cols-1 gap-y-2">
           <Input
             label="Phone"
-            name="phone"
-            type="phone"
-            autoComplete="phone"
-            required
-            defaultValue={customer.phone}
+            {...register("phone", {
+              required: true,
+            })}
+            defaultValue={phone}
+            errors={errors}
           />
         </div>
       </AccountInfo>
@@ -54,4 +87,4 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
   )
 }
 
-export default ProfileEmail
+export default ProfilePhone

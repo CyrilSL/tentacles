@@ -1,30 +1,32 @@
-"use client"
-
-import { InformationCircleSolid } from "@medusajs/icons"
-import { Cart } from "@medusajs/medusa"
-import { Heading, Label, Text, Tooltip } from "@medusajs/ui"
 import React, { useMemo } from "react"
-import { useFormState } from "react-dom"
-
+import { medusaClient } from "@lib/config"
+import { Cart } from "@medusajs/medusa"
+import { Button, Label, Tooltip, Text, Heading } from "@medusajs/ui"
+import { InformationCircleSolid } from "@medusajs/icons"
 import Input from "@modules/common/components/input"
 import Trash from "@modules/common/icons/trash"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import { SubmitButton } from "@modules/checkout/components/submit-button"
-import {
-  removeDiscount,
-  removeGiftCard,
-  submitDiscountForm,
-} from "@modules/checkout/actions"
-import { formatAmount } from "@lib/util/prices"
+import { formatAmount, useCart, useUpdateCart } from "medusa-react"
+import { useForm } from "react-hook-form"
+import { useMutation } from "@tanstack/react-query"
+
+type DiscountFormValues = {
+  discount_code: string
+}
 
 type DiscountCodeProps = {
   cart: Omit<Cart, "refundable_amount" | "refunded_total">
 }
 
 const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
-  const [isOpen, setIsOpen] = React.useState(false)
+  const { id, discounts, gift_cards, region } = cart
+  const { mutate, isLoading } = useUpdateCart(id)
+  const { setCart } = useCart()
 
-  const { discounts, gift_cards, region } = cart
+  const { isLoading: mutationLoading, mutate: removeDiscount } = useMutation(
+    (payload: { cartId: string; code: string }) => {
+      return medusaClient.carts.deleteDiscount(payload.cartId, payload.code)
+    }
+  )
 
   const appliedDiscount = useMemo(() => {
     if (!discounts || !discounts.length) {
@@ -45,15 +47,79 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     }
   }, [discounts, region])
 
-  const removeGiftCardCode = async (code: string) => {
-    await removeGiftCard(code, gift_cards)
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<DiscountFormValues>({
+    mode: "onSubmit",
+  })
+
+  const onApply = (data: DiscountFormValues) => {
+    mutate(
+      {
+        discounts: [{ code: data.discount_code }],
+      },
+      {
+        onSuccess: ({ cart }) => setCart(cart),
+        onError: () => {
+          checkGiftCard(data.discount_code)
+        },
+      }
+    )
   }
 
-  const removeDiscountCode = async () => {
-    await removeDiscount(discounts[0].code)
+  const checkGiftCard = (code: string) => {
+    mutate(
+      {
+        gift_cards: [
+          { code: code },
+          ...gift_cards.map((gc) => ({ code: gc.code })),
+        ],
+      },
+      {
+        onSuccess: ({ cart }) => setCart(cart),
+        onError: () => {
+          setError(
+            "discount_code",
+            {
+              message: "Code is invalid",
+            },
+            {
+              shouldFocus: true,
+            }
+          )
+        },
+      }
+    )
   }
 
-  const [message, formAction] = useFormState(submitDiscountForm, null)
+  const removeGiftCard = (code: string) => {
+    mutate(
+      {
+        gift_cards: [...gift_cards]
+          .filter((gc) => gc.code !== code)
+          .map((gc) => ({ code: gc.code })),
+      },
+      {
+        onSuccess: ({ cart }) => {
+          setCart(cart)
+        },
+      }
+    )
+  }
+
+  const onRemove = () => {
+    removeDiscount(
+      { cartId: id, code: discounts[0].code },
+      {
+        onSuccess: ({ cart }) => {
+          setCart(cart)
+        },
+      }
+    )
+  }
 
   return (
     <div className="w-full bg-white flex flex-col">
@@ -71,15 +137,12 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                   <span className="truncate">{gc.code}</span>
                 </Text>
                 <Text className="font-semibold">
-                  {formatAmount({
-                    region: region,
-                    amount: gc.balance,
-                    includeTaxes: false,
-                  })}
+                  {formatAmount({ region: region, amount: gc.balance })}
                 </Text>
                 <button
                   className="flex items-center gap-x-2 !background-transparent !border-none"
-                  onClick={() => removeGiftCardCode(gc.code)}
+                  onClick={() => removeGiftCard(gc.code)}
+                  disabled={isLoading}
                 >
                   <Trash size={14} />
                   <span className="sr-only">Remove gift card from order</span>
@@ -101,7 +164,8 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                 </Text>
                 <button
                   className="flex items-center"
-                  onClick={removeDiscountCode}
+                  onClick={onRemove}
+                  disabled={isLoading}
                 >
                   <Trash size={14} />
                   <span className="sr-only">
@@ -112,33 +176,31 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
             </div>
           </div>
         ) : (
-          <form action={formAction} className="w-full">
-            <Label className="flex gap-x-1 my-2 items-center">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                type="button"
-                className="txt-medium text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-              >
-                Add gift card or discount code
-              </button>
+          <form onSubmit={handleSubmit(onApply)} className="w-full">
+            <Label className="flex gap-x-1 mb-2">
+              Gift card or discount code?
               <Tooltip content="You can add multiple gift cards, but only one discount code.">
                 <InformationCircleSolid color="var(--fg-muted)" />
               </Tooltip>
             </Label>
-            {isOpen && (
-              <>
-                <div className="flex w-full gap-x-2 items-center">
-                  <Input
-                    label="Please enter code"
-                    name="code"
-                    type="text"
-                    autoFocus={false}
-                  />
-                  <SubmitButton variant="secondary">Apply</SubmitButton>
-                </div>
-                <ErrorMessage error={message} />
-              </>
-            )}
+            <div className="flex w-full gap-x-2 items-center">
+              <Input
+                label="Please enter code"
+                {...register("discount_code", {
+                  required: "Code is required",
+                })}
+                errors={errors}
+              />
+
+              <Button
+                type="submit"
+                variant="secondary"
+                className="!min-h-[0] h-10"
+                isLoading={isLoading}
+              >
+                Apply
+              </Button>
+            </div>
           </form>
         )}
       </div>

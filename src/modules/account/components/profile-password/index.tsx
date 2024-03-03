@@ -1,65 +1,117 @@
-"use client"
-
+import { medusaClient } from "@lib/config"
 import { Customer } from "@medusajs/medusa"
-import React, { useEffect } from "react"
-
 import Input from "@modules/common/components/input"
-
+import { useUpdateMe } from "medusa-react"
+import React, { useEffect } from "react"
+import { useForm } from "react-hook-form"
 import AccountInfo from "../account-info"
-import { updateCustomerPassword } from "@modules/account/actions"
-import { useFormState } from "react-dom"
 
 type MyInformationProps = {
   customer: Omit<Customer, "password_hash">
 }
 
+type UpdateCustomerPasswordFormData = {
+  old_password: string
+  new_password: string
+  confirm_password: string
+}
+
 const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
-  const [successState, setSuccessState] = React.useState(false)
+  const [errorMessage, setErrorMessage] = React.useState<string | undefined>(
+    undefined
+  )
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    setError,
+  } = useForm<UpdateCustomerPasswordFormData>()
 
-  const [state, formAction] = useFormState(updateCustomerPassword, {
-    customer,
-    success: false,
-    error: false,
-  })
-
-  const clearState = () => {
-    setSuccessState(false)
-  }
+  const {
+    mutate: update,
+    isLoading,
+    isSuccess,
+    isError,
+    reset: clearState,
+  } = useUpdateMe()
 
   useEffect(() => {
-    setSuccessState(state.success)
-  }, [state])
+    reset()
+  }, [customer, reset])
+
+  const updatePassword = async (data: UpdateCustomerPasswordFormData) => {
+    const isValid = await medusaClient.auth
+      .authenticate({
+        email: customer.email,
+        password: data.old_password,
+      })
+      .then(() => true)
+      .catch(() => false)
+
+    if (!isValid) {
+      setError("old_password", {
+        type: "validate",
+        message: "Old password is incorrect",
+      })
+      setErrorMessage("Old password is incorrect")
+
+      return
+    }
+
+    if (data.new_password !== data.confirm_password) {
+      setError("confirm_password", {
+        type: "validate",
+        message: "Passwords do not match",
+      })
+      setErrorMessage("Passwords do not match")
+
+      return
+    }
+
+    return update({
+      id: customer.id,
+      password: data.new_password,
+    })
+  }
 
   return (
-    <form action={formAction} onReset={() => clearState()} className="w-full">
+    <form
+      onSubmit={handleSubmit(updatePassword)}
+      onReset={() => reset()}
+      className="w-full"
+    >
       <AccountInfo
         label="Password"
         currentInfo={
           <span>The password is not shown for security reasons</span>
         }
-        isSuccess={successState}
-        isError={!!state.error}
-        errorMessage={state.error}
+        isLoading={isLoading}
+        isSuccess={isSuccess}
+        isError={isError}
+        errorMessage={errorMessage}
         clearState={clearState}
       >
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Old password"
-            name="old_password"
-            required
+            {...register("old_password", {
+              required: true,
+            })}
             type="password"
+            errors={errors}
           />
           <Input
             label="New password"
             type="password"
-            name="new_password"
-            required
+            {...register("new_password", { required: true })}
+            errors={errors}
           />
           <Input
             label="Confirm password"
             type="password"
-            name="confirm_password"
-            required
+            {...register("confirm_password", { required: true })}
+            errors={errors}
           />
         </div>
       </AccountInfo>

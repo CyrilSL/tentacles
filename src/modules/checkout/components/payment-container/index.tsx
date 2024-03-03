@@ -1,12 +1,10 @@
-import { RadioGroup } from "@headlessui/react"
-import { InformationCircleSolid } from "@medusajs/icons"
 import { PaymentSession } from "@medusajs/medusa"
-import { Text, Tooltip, clx } from "@medusajs/ui"
-import React from "react"
-
 import Radio from "@modules/common/components/radio"
-
+import React from "react"
 import PaymentTest from "../payment-test"
+import { Text, Tooltip, clx } from "@medusajs/ui"
+import { InformationCircleSolid } from "@medusajs/icons"
+import { RadioGroup } from "@headlessui/react"
 
 type PaymentContainerProps = {
   paymentSession: PaymentSession
@@ -60,7 +58,7 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
               <PaymentTest className="hidden small:block" />
             )}
           </div>
-          <span className="justify-self-end text-ui-fg-base">
+          <span className="justify-self-end text-gray-700">
             {paymentInfoMap[paymentSession.provider_id]?.icon}
           </span>
         </div>

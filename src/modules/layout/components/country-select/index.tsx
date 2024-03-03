@@ -1,13 +1,12 @@
 "use client"
 
 import { Listbox, Transition } from "@headlessui/react"
-import { Region } from "@medusajs/medusa"
+import { useStore } from "@lib/context/store-context"
+import useToggleState, { StateType } from "@lib/hooks/use-toggle-state"
+import { revalidateTags } from "app/actions"
+import { useRegions } from "medusa-react"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import ReactCountryFlag from "react-country-flag"
-
-import { StateType } from "@lib/hooks/use-toggle-state"
-import { updateRegion } from "app/actions"
-import { useParams, usePathname } from "next/navigation"
 
 type CountryOption = {
   country: string
@@ -17,16 +16,14 @@ type CountryOption = {
 
 type CountrySelectProps = {
   toggleState: StateType
-  regions: Region[]
 }
 
-const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
+const CountrySelect = ({ toggleState }: CountrySelectProps) => {
+  const { countryCode, setRegion } = useStore()
+  const { regions } = useRegions()
   const [current, setCurrent] = useState<CountryOption | undefined>(undefined)
 
-  const { countryCode } = useParams()
-  const currentPath = usePathname().split(`/${countryCode}`)[1]
-
-  const { state, close } = toggleState
+  const { state, open, close } = toggleState
 
   const options: CountryOption[] | undefined = useMemo(() => {
     return regions
@@ -38,7 +35,6 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
         }))
       })
       .flat()
-      .sort((a, b) => a.label.localeCompare(b.label))
   }, [regions])
 
   useEffect(() => {
@@ -46,17 +42,17 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
       const option = options?.find((o) => o.country === countryCode)
       setCurrent(option)
     }
-  }, [options, countryCode])
+  }, [countryCode, options])
 
   const handleChange = (option: CountryOption) => {
-    updateRegion(option.country, currentPath)
+    revalidateTags(["medusa_request", "products", "collections"])
+    setRegion(option.region, option.country)
     close()
   }
 
   return (
     <div>
       <Listbox
-        as="span"
         onChange={handleChange}
         defaultValue={
           countryCode

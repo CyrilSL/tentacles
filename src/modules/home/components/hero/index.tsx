@@ -1,5 +1,6 @@
-import { Github } from "@medusajs/icons"
 import { Button, Heading } from "@medusajs/ui"
+import InteractiveLink from "@modules/common/components/interactive-link"
+import { Github } from "@medusajs/icons"
 
 const Hero = () => {
   return (

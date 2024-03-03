@@ -1,12 +1,11 @@
+import { useModal } from "@lib/context/modal-context"
 import { Container, Text } from "@medusajs/ui"
+import InteractiveLink from "@modules/common/components/interactive-link"
 import { useHits, useSearchBox } from "react-instantsearch-hooks-web"
 
-import InteractiveLink from "@modules/common/components/interactive-link"
-
-const ShowAll = () => {
+const ShowAll = ({ close }: { close: () => void }) => {
   const { hits } = useHits()
   const { query } = useSearchBox()
-  const width = typeof window !== "undefined" ? window.innerWidth : 0
 
   if (query === "") return null
   if (hits.length > 0 && hits.length <= 6) return null
@@ -20,9 +19,11 @@ const ShowAll = () => {
   }
 
   return (
-    <Container className="flex sm:flex-col small:flex-row gap-2 justify-center items-center h-fit py-4 small:py-2">
-      <Text>Showing the first {width > 640 ? 6 : 3} results.</Text>
-      <InteractiveLink href={`/results/${query}`}>View all</InteractiveLink>
+    <Container className="flex flex-col small:flex-row gap-2 justify-center items-center h-fit py-4 small:py-2">
+      <Text>Showing the first 6 results.</Text>
+      <InteractiveLink href={`/search/${query}`} onClick={close}>
+        View all
+      </InteractiveLink>
     </Container>
   )
 }

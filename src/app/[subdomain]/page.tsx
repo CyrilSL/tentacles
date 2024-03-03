@@ -24,7 +24,7 @@ export default function Storefront({
       const fetchProductsByDomain = async () => {
         setIsLoadingg(true);
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/fetch_by_domain/?domain=${params.subdomain}`);
+          const response = await fetch(`https://octopus-production-47ec.up.railway.app/store/fetch_by_domain/?domain=${params.subdomain}`);
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }

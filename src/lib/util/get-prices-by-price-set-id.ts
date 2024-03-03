@@ -1,4 +1,4 @@
-import { CalculatedPriceSetDTO, IPricingModuleService } from "@medusajs/types"
+import { IPricingModuleService, CalculatedPriceSetDTO } from "@medusajs/types"
 
 type Props = {
   products: any[]

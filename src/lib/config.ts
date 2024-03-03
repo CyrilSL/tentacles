@@ -8,16 +8,7 @@ if (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL) {
   MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
 }
 
-export const medusaClient = new Medusa({
-  baseUrl: MEDUSA_BACKEND_URL,
-  maxRetries: 3,
-})
-
-if (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL) {
-  MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
-}
-
-export const queryClient = new QueryClient({
+const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
@@ -26,3 +17,7 @@ export const queryClient = new QueryClient({
     },
   },
 })
+
+const medusaClient = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+
+export { MEDUSA_BACKEND_URL, queryClient, medusaClient }

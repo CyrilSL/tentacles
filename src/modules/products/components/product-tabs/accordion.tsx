@@ -1,6 +1,6 @@
-import { Text, clx } from "@medusajs/ui"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import React from "react"
+import { Heading, Text, clx } from "@medusajs/ui"
 
 type AccordionItemProps = AccordionPrimitive.AccordionItemProps & {
   title: string
@@ -14,20 +14,17 @@ type AccordionItemProps = AccordionPrimitive.AccordionItemProps & {
   complete?: boolean
   active?: boolean
   triggerable?: boolean
-  children: React.ReactNode
 }
 
-type AccordionProps =
+const Accordion: React.FC<
   | (AccordionPrimitive.AccordionSingleProps &
       React.RefAttributes<HTMLDivElement>)
   | (AccordionPrimitive.AccordionMultipleProps &
       React.RefAttributes<HTMLDivElement>)
-
-const Accordion: React.FC<AccordionProps> & {
+> & {
   Item: React.FC<AccordionItemProps>
 } = ({ children, ...props }) => {
   return (
-    //  @ts-ignore  
     <AccordionPrimitive.Root {...props}>{children}</AccordionPrimitive.Root>
   )
 }
@@ -45,7 +42,6 @@ const Item: React.FC<AccordionItemProps> = ({
   ...props
 }) => {
   return (
-// @ts-ignore  
     <AccordionPrimitive.Item
       {...props}
       className={clx(
@@ -54,14 +50,12 @@ const Item: React.FC<AccordionItemProps> = ({
         className
       )}
     >
-     
       <AccordionPrimitive.Header className="px-1">
         <div className="flex flex-col">
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-4">
               <Text className="text-ui-fg-subtle text-sm">{title}</Text>
             </div>
-            
             <AccordionPrimitive.Trigger>
               {customTrigger || <MorphingTrigger />}
             </AccordionPrimitive.Trigger>
@@ -73,7 +67,6 @@ const Item: React.FC<AccordionItemProps> = ({
           )}
         </div>
       </AccordionPrimitive.Header>
-     
       <AccordionPrimitive.Content
         forceMount={forceMountContent}
         className={clx(

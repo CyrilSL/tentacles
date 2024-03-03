@@ -1,5 +1,5 @@
 import { Order } from "@medusajs/medusa"
-import { Text } from "@medusajs/ui"
+import { Heading, Text } from "@medusajs/ui"
 
 type OrderDetailsProps = {
   order: Order
@@ -7,6 +7,8 @@ type OrderDetailsProps = {
 }
 
 const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
+  const items = order.items.reduce((acc, i) => acc + i.quantity, 0)
+
   const formatStatus = (str: string) => {
     const formatted = str.split("_").join(" ")
 
@@ -15,7 +17,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
 
   return (
     <div>
-      <Text>
+      <Text className="mt-8">
         We have sent the order confirmation details to{" "}
         <span className="text-ui-fg-medium-plus font-semibold">
           {order.email}

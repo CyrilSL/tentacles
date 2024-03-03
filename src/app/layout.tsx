@@ -1,19 +1,16 @@
-import { Metadata } from "next"
-import "styles/globals.css"
 import Providers from "@modules/providers"
+import "styles/globals.css"
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://localhost:8000"
-
-export const metadata: Metadata = {
-  metadataBase: new URL(BASE_URL),
-}
-
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en" data-mode="light">
       <body>
         <Providers>
-        <main className="relative">{props.children}</main>
+          <main className="relative">{children}</main>
         </Providers>
       </body>
     </html>

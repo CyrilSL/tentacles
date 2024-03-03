@@ -1,18 +1,24 @@
-import { Region } from "@medusajs/medusa"
+import { ProductCollection } from "@medusajs/medusa"
+import ProductRail from "./product-rail"
 
-import ProductRail from "@modules/home/components/featured-products/product-rail"
-import { ProductCollectionWithPreviews } from "types/global"
-
-export default async function FeaturedProducts({
+const FeaturedProducts = ({
   collections,
-  region,
 }: {
-  collections: ProductCollectionWithPreviews[]
-  region: Region
-}) {
-  return collections.map((collection) => (
-    <li key={collection.id}>
-      <ProductRail collection={collection} region={region} />
-    </li>
-  ))
+  collections: ProductCollection[]
+}) => {
+  return (
+    <div className="py-12">
+      <div className="py-12">
+        <ul className="flex flex-col gap-x-6 gap-y-8">
+          {collections.map((collection) => (
+            <li key={collection.id}>
+              <ProductRail collection={collection} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
 }
+
+export default FeaturedProducts

@@ -1,71 +1,104 @@
-"use client"
-
-import React, { useEffect, useState } from "react"
-import { PencilSquare as Edit, Trash } from "@medusajs/icons"
-import { Button, Heading, Text, clx } from "@medusajs/ui"
-import { Address, Region } from "@medusajs/medusa"
-
+import { medusaClient } from "@lib/config"
+import { useAccount } from "@lib/context/account-context"
 import useToggleState from "@lib/hooks/use-toggle-state"
+import { Address } from "@medusajs/medusa"
 import CountrySelect from "@modules/checkout/components/country-select"
+import { Button, Heading, Text } from "@medusajs/ui"
+import { PencilSquare as Edit, Trash } from "@medusajs/icons"
 import Input from "@modules/common/components/input"
 import Modal from "@modules/common/components/modal"
-import {
-  deleteCustomerShippingAddress,
-  updateCustomerShippingAddress,
-} from "@modules/account/actions"
 import Spinner from "@modules/common/icons/spinner"
-import { useFormState } from "react-dom"
-import { SubmitButton } from "@modules/checkout/components/submit-button"
+import clsx from "clsx"
+import React, { useState } from "react"
+import { useForm } from "react-hook-form"
+
+type FormValues = {
+  first_name: string
+  last_name: string
+  city: string
+  country_code: string
+  postal_code: string
+  province?: string
+  address_1: string
+  address_2?: string
+  phone?: string
+  company?: string
+}
 
 type EditAddressProps = {
-  region: Region
   address: Address
   isActive?: boolean
 }
 
 const EditAddress: React.FC<EditAddressProps> = ({
-  region,
   address,
   isActive = false,
 }) => {
-  const [removing, setRemoving] = useState(false)
-  const [successState, setSuccessState] = useState(false)
-  const { state, open, close: closeModal } = useToggleState(false)
+  const { state, open, close } = useToggleState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | undefined>(undefined)
 
-  const [formState, formAction] = useFormState(updateCustomerShippingAddress, {
-    success: false,
-    error: null,
-    addressId: address.id,
+  const { refetchCustomer } = useAccount()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      first_name: address.first_name || undefined,
+      last_name: address.last_name || undefined,
+      city: address.city || undefined,
+      address_1: address.address_1 || undefined,
+      address_2: address.address_2 || undefined,
+      country_code: address.country_code || undefined,
+      postal_code: address.postal_code || undefined,
+      phone: address.phone || undefined,
+      company: address.company || undefined,
+      province: address.province || undefined,
+    },
   })
 
-  const close = () => {
-    setSuccessState(false)
-    closeModal()
-  }
+  const submit = handleSubmit(async (data: FormValues) => {
+    setSubmitting(true)
+    setError(undefined)
 
-  useEffect(() => {
-    if (successState) {
-      close()
+    const payload = {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      company: data.company || "Personal",
+      address_1: data.address_1,
+      address_2: data.address_2 || "",
+      city: data.city,
+      country_code: data.country_code,
+      province: data.province || "",
+      postal_code: data.postal_code,
+      phone: data.phone || "None",
+      metadata: {},
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [successState])
 
-  useEffect(() => {
-    if (formState.success) {
-      setSuccessState(true)
-    }
-  }, [formState])
+    medusaClient.customers.addresses
+      .updateAddress(address.id, payload)
+      .then(() => {
+        setSubmitting(false)
+        refetchCustomer()
+        close()
+      })
+      .catch(() => {
+        setSubmitting(false)
+        setError("Failed to update address, please try again.")
+      })
+  })
 
-  const removeAddress = async () => {
-    setRemoving(true)
-    await deleteCustomerShippingAddress(address.id)
-    setRemoving(false)
+  const removeAddress = () => {
+    medusaClient.customers.addresses.deleteAddress(address.id).then(() => {
+      refetchCustomer()
+    })
   }
 
   return (
     <>
       <div
-        className={clx(
+        className={clsx(
           "border rounded-rounded p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors",
           {
             "border-gray-900": isActive,
@@ -77,7 +110,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             {address.first_name} {address.last_name}
           </Heading>
           {address.company && (
-            <Text className="txt-compact-small text-ui-fg-base">
+            <Text className="txt-compact-small text-gray-700">
               {address.company}
             </Text>
           )}
@@ -97,17 +130,17 @@ const EditAddress: React.FC<EditAddressProps> = ({
         </div>
         <div className="flex items-center gap-x-4">
           <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
+            className="text-small-regular text-gray-700 flex items-center gap-x-2"
             onClick={open}
           >
             <Edit />
             Edit
           </button>
           <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
+            className="text-small-regular text-gray-700 flex items-center gap-x-2"
             onClick={removeAddress}
           >
-            {removing ? <Spinner /> : <Trash />}
+            <Trash />
             Remove
           </button>
         </div>
@@ -117,100 +150,95 @@ const EditAddress: React.FC<EditAddressProps> = ({
         <Modal.Title>
           <Heading className="mb-2">Edit address</Heading>
         </Modal.Title>
-        <form action={formAction}>
-          <Modal.Body>
-            <div className="grid grid-cols-1 gap-y-2">
-              <div className="grid grid-cols-2 gap-x-2">
-                <Input
-                  label="First name"
-                  name="first_name"
-                  required
-                  autoComplete="given-name"
-                  defaultValue={address.first_name || undefined}
-                />
-                <Input
-                  label="Last name"
-                  name="last_name"
-                  required
-                  autoComplete="family-name"
-                  defaultValue={address.last_name || undefined}
-                />
-              </div>
+        <Modal.Body>
+          <div className="grid grid-cols-1 gap-y-2">
+            <div className="grid grid-cols-2 gap-x-2">
               <Input
-                label="Company"
-                name="company"
-                autoComplete="organization"
-                defaultValue={address.company || undefined}
-              />
-              <Input
-                label="Address"
-                name="address_1"
+                label="First name"
+                {...register("first_name", {
+                  required: "First name is required",
+                })}
                 required
-                autoComplete="address-line1"
-                defaultValue={address.address_1 || undefined}
+                errors={errors}
+                autoComplete="given-name"
               />
               <Input
-                label="Apartment, suite, etc."
-                name="address_2"
-                autoComplete="address-line2"
-                defaultValue={address.address_2 || undefined}
-              />
-              <div className="grid grid-cols-[144px_1fr] gap-x-2">
-                <Input
-                  label="Postal code"
-                  name="postal_code"
-                  required
-                  autoComplete="postal-code"
-                  defaultValue={address.postal_code || undefined}
-                />
-                <Input
-                  label="City"
-                  name="city"
-                  required
-                  autoComplete="locality"
-                  defaultValue={address.city || undefined}
-                />
-              </div>
-              <Input
-                label="Province / State"
-                name="province"
-                autoComplete="address-level1"
-                defaultValue={address.province || undefined}
-              />
-              <CountrySelect
-                name="country_code"
-                region={region}
+                label="Last name"
+                {...register("last_name", {
+                  required: "Last name is required",
+                })}
                 required
-                autoComplete="country"
-                defaultValue={address.country_code || undefined}
-              />
-              <Input
-                label="Phone"
-                name="phone"
-                autoComplete="phone"
-                defaultValue={address.phone || undefined}
+                errors={errors}
+                autoComplete="family-name"
               />
             </div>
-            {formState.error && (
-              <div className="text-rose-500 text-small-regular py-2">
-                {formState.error}
-              </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <div className="flex gap-3 mt-6">
-              <Button
-                type="reset"
-                variant="secondary"
-                onClick={close}
-                className="h-10"
-              >
-                Cancel
-              </Button>
-              <SubmitButton>Save</SubmitButton>
+            <Input label="Company" {...register("company")} errors={errors} />
+            <Input
+              label="Address"
+              {...register("address_1", {
+                required: "Address is required",
+              })}
+              required
+              errors={errors}
+              autoComplete="address-line1"
+            />
+            <Input
+              label="Apartment, suite, etc."
+              {...register("address_2")}
+              errors={errors}
+              autoComplete="address-line2"
+            />
+            <div className="grid grid-cols-[144px_1fr] gap-x-2">
+              <Input
+                label="Postal code"
+                {...register("postal_code", {
+                  required: "Postal code is required",
+                })}
+                required
+                errors={errors}
+                autoComplete="postal-code"
+              />
+              <Input
+                label="City"
+                {...register("city", {
+                  required: "City is required",
+                })}
+                errors={errors}
+                required
+                autoComplete="locality"
+              />
             </div>
-          </Modal.Footer>
-        </form>
+            <Input
+              label="Province / State"
+              {...register("province")}
+              errors={errors}
+              autoComplete="address-level1"
+            />
+            <CountrySelect
+              {...register("country_code", { required: true })}
+              autoComplete="country"
+            />
+            <Input
+              label="Phone"
+              {...register("phone")}
+              errors={errors}
+              autoComplete="phone"
+            />
+          </div>
+          {error && (
+            <div className="text-rose-500 text-small-regular py-2">{error}</div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex gap-3 mt-4">
+            <Button variant="secondary" onClick={close} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button className="min-h-0" onClick={submit} isLoading={submitting}>
+              Save
+            </Button>
+          </div>
+        </Modal.Footer>
       </Modal>
     </>
   )

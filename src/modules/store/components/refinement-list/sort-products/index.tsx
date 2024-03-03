@@ -1,14 +1,11 @@
-"use client"
-
-import { ChangeEvent } from "react"
-
 import FilterRadioGroup from "@modules/common/components/filter-radio-group"
+import { ChangeEvent } from "react"
 
 export type SortOptions = "price_asc" | "price_desc" | "created_at"
 
 type SortProductsProps = {
   sortBy: SortOptions
-  setQueryParams: (name: string, value: SortOptions) => void
+  setSortBy: (value: string) => void
 }
 
 const sortOptions = [
@@ -26,10 +23,9 @@ const sortOptions = [
   },
 ]
 
-const SortProducts = ({ sortBy, setQueryParams }: SortProductsProps) => {
+const SortProducts = ({ sortBy, setSortBy }: SortProductsProps) => {
   const handleChange = (e: ChangeEvent<HTMLButtonElement>) => {
-    const newSortBy = e.target.value as SortOptions
-    setQueryParams("sortBy", newSortBy)
+    setSortBy(e.target.value)
   }
 
   return (

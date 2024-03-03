@@ -1,52 +1,93 @@
-"use client"
-
+import { useAccount } from "@lib/context/account-context"
 import { Customer } from "@medusajs/medusa"
-import React, { useEffect } from "react"
-import { useFormState } from "react-dom"
-
 import Input from "@modules/common/components/input"
-
+import { useUpdateMe } from "medusa-react"
+import React, { useEffect } from "react"
+import { useForm, useWatch } from "react-hook-form"
 import AccountInfo from "../account-info"
-import { updateCustomerEmail } from "@modules/account/actions"
 
 type MyInformationProps = {
   customer: Omit<Customer, "password_hash">
 }
 
-const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
-  const [successState, setSuccessState] = React.useState(false)
+type UpdateCustomerEmailFormData = {
+  email: string
+}
 
-  const [state, formAction] = useFormState(updateCustomerEmail, {
-    error: false,
-    success: false,
+const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
+  const [errorMessage, setErrorMessage] = React.useState<string | undefined>(
+    undefined
+  )
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<UpdateCustomerEmailFormData>({
+    defaultValues: {
+      email: customer.email,
+    },
   })
 
-  const clearState = () => {
-    setSuccessState(false)
-  }
+  const { refetchCustomer } = useAccount()
+
+  const {
+    mutate: update,
+    isLoading,
+    isSuccess,
+    isError,
+    reset: clearState,
+  } = useUpdateMe()
 
   useEffect(() => {
-    setSuccessState(state.success)
-  }, [state])
+    reset({
+      email: customer.email,
+    })
+  }, [customer, reset])
+
+  const email = useWatch({
+    control,
+    name: "email",
+  })
+
+  const updateEmail = (data: UpdateCustomerEmailFormData) => {
+    return update(
+      {
+        id: customer.id,
+        ...data,
+      },
+      {
+        onSuccess: () => {
+          refetchCustomer()
+        },
+        onError: () => {
+          setErrorMessage("Email already in use")
+        },
+      }
+    )
+  }
 
   return (
-    <form action={formAction} className="w-full">
+    <form onSubmit={handleSubmit(updateEmail)} className="w-full">
       <AccountInfo
         label="Email"
         currentInfo={`${customer.email}`}
-        isSuccess={successState}
-        isError={!!state.error}
-        errorMessage={state.error}
+        isLoading={isLoading}
+        isSuccess={isSuccess}
+        isError={isError}
+        errorMessage={errorMessage}
         clearState={clearState}
       >
         <div className="grid grid-cols-1 gap-y-2">
           <Input
             label="Email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            defaultValue={customer.email}
+            {...register("email", {
+              required: true,
+            })}
+            defaultValue={email}
+            errors={errors}
           />
         </div>
       </AccountInfo>

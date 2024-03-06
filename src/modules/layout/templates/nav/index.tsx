@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query' // Import useQuery
 
 async function fetchStoreName(domain: string) {
  
-  const response = await fetch(` https://octopus-production-47ec.up.railway.app/store/store_by_domain/?domain=${domain}`);
+  const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/store_by_domain/?domain=${domain}`);
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }

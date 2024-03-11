@@ -3,7 +3,9 @@ import Image from "next/image";
 import { useProducts } from "medusa-react"
 import { useAdminStore } from "medusa-react"
 import React, { useEffect, useState } from "react";
-
+import DomainProducts from "@modules/products/components/domain-products";
+import { StoreGetProductsParams } from "@medusajs/medusa"
+import { SortOptions } from "../../modules/store/components/refinement-list/sort-products"
 // Define the Product interface
 interface Product {
   id: string;
@@ -19,6 +21,8 @@ export default function Storefront({
     const { products, isLoading } = useProducts();
     const [domainProducts, setDomainProducts] = useState<Product[]>([]);
     const [isLoadingg, setIsLoadingg] = useState(false);
+    const [productParams, setParams] = useState<StoreGetProductsParams>({})
+    const [sortBy, setSortBy] = useState<SortOptions>("created_at")
 
     useEffect(() => {
       const fetchProductsByDomain = async () => {
@@ -30,6 +34,7 @@ export default function Storefront({
           }
           const data = await response.json();
           setDomainProducts(data.products); // Assuming the API response contains a 'products' array
+          console.log("DOmain Products: ",data.products)
         } catch (error) {
           console.error("Failed to fetch products:", error);
           setDomainProducts([]);
@@ -58,7 +63,7 @@ export default function Storefront({
           </a>
         </div>
       </div>
- <div>
+ {/* <div>
   <h1>All Products</h1>
       {isLoading && <span>Loading...</span>}
       {products && !products.length && <span>No Products</span>}
@@ -69,9 +74,9 @@ export default function Storefront({
           ))}
         </ul>
       )}
-    </div>
+    </div> */}
 
-    <div>
+    {/* <div>
         <h1>Domain Products</h1>
         {isLoading && <span>Loading...</span>}
         {!isLoading && domainProducts.length === 0 && <span>No Products</span>}
@@ -82,8 +87,9 @@ export default function Storefront({
             ))}
           </ul>
         )}
-      </div>
+      </div> */}
 
+<DomainProducts params={productParams} sortBy={sortBy} subdomain={params.subdomain}/>
 
       <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
         <Image

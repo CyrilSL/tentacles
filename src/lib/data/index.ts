@@ -115,6 +115,8 @@ export async function getProductsList({
       throw err
     })
 
+    console.log('Products in all fetch native : ',products)
+
   return {
     response: { products, count },
     nextPage,
